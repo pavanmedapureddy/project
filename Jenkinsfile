@@ -1,34 +1,28 @@
 pipeline {
-    agent any
+  agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                echo 'Checking out code from Git...'
-                git 'https://github.com/pavanmedapureddy/project.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'No build required for HTML. Just verifying files...'
-                sh 'ls -R'
-            }
-        }
-
-        stage('Archive') {
-            steps {
-                echo 'Archiving HTML project...'
-                archiveArtifacts artifacts: '**/*', fingerprint: true
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploying to server...'
-                // Example: Copy to remote server
-                // sh 'scp -r * user@server:/var/www/html/'
-            }
-        }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
     }
-}
+
+    stage('Deploy') {
+      steps {
+        echo "Deploying from workspace: ${env.WORKSPACE}"
+        // call the server deploy script and pass the workspace path (handles spaces)
+        sh "sudo /usr/local/bin/deploy_site.sh \"${env.WORKSPACE}\""
+      }
+    }
+  } // end stages
+
+  post {
+    success {
+      echo "Deployment finished: SUCCESS"
+    }
+    failure {
+      echo "Deployment finished: FAILURE"
+    }
+  }
+} // end pipeline
